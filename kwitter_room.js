@@ -1,37 +1,61 @@
-
 var firebaseConfig = {
-  apiKey: "AIzaSyAG02ZUiwIeRDIFy3fHZYfr0QOxbw1cK7Q",
-  authDomain: "twitter-ripoff-e5cf4.firebaseapp.com",
-  databaseURL: "https://twitter-ripoff-e5cf4-default-rtdb.firebaseio.com",
-  projectId: "twitter-ripoff-e5cf4",
-  storageBucket: "twitter-ripoff-e5cf4.appspot.com",
-  messagingSenderId: "690719742978",
-  appId: "1:690719742978:web:035a92f5efe92e36b5db1b"
-};
-firebase.initializeApp(firebaseConfig);
+      apiKey: "AIzaSyAG02ZUiwIeRDIFy3fHZYfr0QOxbw1cK7Q",
+      authDomain: "twitter-ripoff-e5cf4.firebaseapp.com",
+      databaseURL: "https://twitter-ripoff-e5cf4-default-rtdb.firebaseio.com",
+      projectId: "twitter-ripoff-e5cf4",
+      storageBucket: "twitter-ripoff-e5cf4.appspot.com",
+      messagingSenderId: "690719742978",
+      appId: "1:690719742978:web:035a92f5efe92e36b5db1b"
+    };
+    firebase.initializeApp(firebaseConfig);
 
-username = localStorage.getItem("username");
-document.getElementById("user_name").innerHTML = "Welcome " + username + ".";
+user_name = localStorage.getItem("username");
+room_name = localStorage.getItem("roomname");
 
-function addroom(){
-  roomname = document.getElementById("room_name").value;
-    firebase.database().ref("/").child(roomname).update({
-        purpose: "adding room name"
-    });
-  localStorage.setItem("roomname",roomname);
-  window.location = "kwitter_page.html";
+function send(){
+      msg = document.getElementById("msg").value;
+      firebase.database().ref(room_name).push({
+            name: user_name,
+            message: msg,
+            like: 0
+      });
+      document.getElementById("msg").value = "";
+      
 }
 
-function getData() {firebase.database().ref("/").on('value', function(snapshot) {document.getElementById("output").innerHTML = "";snapshot.forEach(function(childSnapshot) {childKey  = childSnapshot.key;
-  Room_names = childKey;
-  console.log("Room Name: " + Room_names);
-  row = "<div class='room_name' id="+Room_names+" onclick='redirect(this.id)'>#"+Room_names+"</div><hr>";
-  document.getElementById("output").innerHTML += row;
-});});}
+function getData() { firebase.database().ref("/"+room_name).on('value', function(snapshot) { document.getElementById("output").innerHTML = ""; snapshot.forEach(function(childSnapshot) { childKey  = childSnapshot.key; childData = childSnapshot.val(); if(childKey != "purpose") {
+         firebase_message_id = childKey;
+         message_data = childData;
+//Start code
+      console.log(firebase_message_id);
+      console.log(message_data);
+      name = message_data['name'];
+      message = message_data['message'];
+      like = message_data['like'];
+      name_with_tag = "<h4>" + name + "<img class='user_tick' src='tick.png'></h4>";
+      message_with_tag = "<h4 class='message_h4'>" + message + "</h4>";
+      like_button = "<button class='btn btn-warning' id=" + firebase_message_id + " value="+like+" onclick = 'updatelike(this.id)'>";
+      span_tag = "<span class='glyphicon glyphicon-thumbs-up'>Like: " + like + "</span> </button> <hr>";
+      row = name_with_tag + message_with_tag + like_button + span_tag;
+      document.getElementById("output").innerHTML += row;
+//End code
+      } });  }); }
 getData();
 
-function redirect(name){
-  console.log(name);
-  localStorage.setItem("roomname",name);
-  window.location = "kwitter_page.html";
+function updatelike(message_id){
+      console.log("Click on live button- " + message_id);
+      button_id = message_id;
+      likes = document.getElementById(button_id).value;
+      updated_likes = Number(likes) + 1;
+      console.log(updated_likes);
+
+      firebase.database().ref(room_name).child(message_id).update({
+            like: updated_likes
+      });
+}
+
+function logout(){
+      localStorage.removeItem("username");
+      localStorage.removeItem("roomname");
+      window.location.replace("index.html");
 }
